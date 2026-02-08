@@ -72,6 +72,20 @@ SetEnv GOOGLE_CLIENT_ID "TU_CLIENT_ID.apps.googleusercontent.com"
 
 Luego reinicia Apache.
 
+
+### Checklist rápida para que aparezca y funcione el botón
+
+1. En Google Cloud, crea credencial OAuth de tipo **Web application**.
+2. En `Authorized JavaScript origins`, agrega: `http://localhost`.
+3. Copia el Client ID y configúralo en Apache:
+
+```apache
+SetEnv GOOGLE_CLIENT_ID "TU_CLIENT_ID.apps.googleusercontent.com"
+```
+
+4. Reinicia Apache en XAMPP.
+5. Entra a `http://localhost/holaw/` y prueba el botón de Google.
+
 > Si no configuras `GOOGLE_CLIENT_ID`, el botón puede mostrarse pero la validación de audiencia del token en backend no tendrá el ID esperado.
 
 ---

@@ -19,64 +19,89 @@ if ($rol === 'admin') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar medicamento</title>
+    <link rel="stylesheet" href="../assets/css/general.css">
+    <link rel="stylesheet" href="../assets/css/forms.css">
 </head>
 <body>
-    <h1>Agregar medicamento</h1>
+<div class="container">
+    <div class="card">
+        <h1>Agregar medicamento</h1>
+        <p>
+            <a href="listar.php">← Ver listado</a>
+            &nbsp;|&nbsp;
+            <a href="<?= htmlspecialchars($dashboard, ENT_QUOTES, 'UTF-8') ?>">Volver al dashboard</a>
+        </p>
 
-    <label for="medicamento_api">Medicamento (API externa, sin jarabes)</label>
-    <select id="medicamento_api">
-        <option value="">Cargando medicamentos...</option>
-    </select>
+        <div class="alert alert-success">
+            Catálogo conectado: selecciona un medicamento de la API y se autocompletará el formulario.
+        </div>
 
-    <form action="guardar.php" method="POST" style="margin-top: 1rem;">
-        <input id="nombre" name="nombre" placeholder="Nombre" required>
-        <input id="tipo" name="tipo" placeholder="Tipo" required>
-        <input id="dosis" name="dosis" placeholder="Dosis" required>
-        <input name="cantidad_total" type="number" min="1" required>
-        <input name="fecha_vencimiento" type="date" required>
-        <button>Guardar</button>
-    </form>
+        <label for="medicamento_api">Medicamento (API externa, sin jarabes)</label>
+        <select id="medicamento_api" style="margin-bottom: 12px;">
+            <option value="">Cargando medicamentos...</option>
+        </select>
 
-    <script>
-        const selectMedicamento = document.getElementById('medicamento_api');
-        const nombreInput = document.getElementById('nombre');
-        const tipoInput = document.getElementById('tipo');
-        const dosisInput = document.getElementById('dosis');
+        <form action="guardar.php" method="POST">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" placeholder="Nombre" required>
 
-        async function cargarMedicamentos() {
-            try {
-                const response = await fetch('../api/medicamentos_externos.php');
-                if (!response.ok) throw new Error();
+            <label for="tipo">Tipo</label>
+            <input id="tipo" name="tipo" placeholder="Tipo" required>
 
-                const data = await response.json();
-                const meds = data.medicamentos || [];
+            <label for="dosis">Dosis</label>
+            <input id="dosis" name="dosis" placeholder="Dosis" required>
 
-                selectMedicamento.innerHTML = '<option value="">Selecciona un medicamento</option>';
+            <label for="cantidad_total">Cantidad total</label>
+            <input id="cantidad_total" name="cantidad_total" type="number" min="1" required>
 
-                meds.forEach((med, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${med.nombre} - ${med.tipo} - ${med.dosis}`;
-                    option.dataset.nombre = med.nombre;
-                    option.dataset.tipo = med.tipo;
-                    option.dataset.dosis = med.dosis;
-                    selectMedicamento.appendChild(option);
-                });
-            } catch (e) {
-                selectMedicamento.innerHTML = '<option value="">No se pudo cargar la API</option>';
-            }
-        }
+            <label for="fecha_vencimiento">Fecha de vencimiento</label>
+            <input id="fecha_vencimiento" name="fecha_vencimiento" type="date" required>
 
-        selectMedicamento.addEventListener('change', (e) => {
-            const option = e.target.selectedOptions[0];
-            if (!option || !option.dataset.nombre) return;
+            <button type="submit">Guardar medicamento</button>
+        </form>
+    </div>
+</div>
 
-            nombreInput.value = option.dataset.nombre;
-            tipoInput.value = option.dataset.tipo;
-            dosisInput.value = option.dataset.dosis;
+<script>
+const selectMedicamento = document.getElementById('medicamento_api');
+const nombreInput = document.getElementById('nombre');
+const tipoInput = document.getElementById('tipo');
+const dosisInput = document.getElementById('dosis');
+
+async function cargarMedicamentos() {
+    try {
+        const response = await fetch('../api/medicamentos_externos.php');
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        const meds = data.medicamentos || [];
+
+        selectMedicamento.innerHTML = '<option value="">Selecciona un medicamento</option>';
+
+        meds.forEach((med, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${med.nombre} - ${med.tipo} - ${med.dosis}`;
+            option.dataset.nombre = med.nombre;
+            option.dataset.tipo = med.tipo;
+            option.dataset.dosis = med.dosis;
+            selectMedicamento.appendChild(option);
         });
+    } catch (e) {
+        selectMedicamento.innerHTML = '<option value="">No se pudo cargar la API</option>';
+    }
+}
 
-        cargarMedicamentos();
-    </script>
+selectMedicamento.addEventListener('change', (e) => {
+    const option = e.target.selectedOptions[0];
+    if (!option || !option.dataset.nombre) return;
+
+    nombreInput.value = option.dataset.nombre;
+    tipoInput.value = option.dataset.tipo;
+    dosisInput.value = option.dataset.dosis;
+});
+
+cargarMedicamentos();
+</script>
 </body>
 </html>
