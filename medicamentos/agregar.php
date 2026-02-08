@@ -1,3 +1,18 @@
+<?php
+session_start();
+if (!isset($_SESSION['id_usuario'])) {
+    header('Location: ../index.php');
+    exit;
+}
+
+$rol = $_SESSION['rol'] ?? 'paciente';
+$dashboard = '../dashboard/paciente.php';
+if ($rol === 'admin') {
+    $dashboard = '../dashboard/admin.php';
+} elseif ($rol === 'cuidador') {
+    $dashboard = '../dashboard/cuidador.php';
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

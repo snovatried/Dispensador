@@ -1,10 +1,15 @@
+<?php
+$googleClientId = getenv('GOOGLE_CLIENT_ID') ?: '';
+$showError = isset($_GET['error']);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Iniciar sesión</title>
     <link rel="stylesheet" href="assets/css/general.css">
+    <link rel="stylesheet" href="assets/css/forms.css">
     <link rel="stylesheet" href="assets/css/login.css">
 </head>
 <body>
@@ -37,7 +42,7 @@
             });
 
             if (!result.ok) {
-                alert('No se pudo iniciar sesion con Google.');
+                alert('No se pudo iniciar sesión con Google.');
                 return;
             }
 
