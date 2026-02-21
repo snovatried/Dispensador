@@ -7,13 +7,11 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'cuidador') {
     exit;
 }
 
-$hasIdPaciente = false;
-$checkColumn = $pdo->query("SHOW COLUMNS FROM programacion LIKE 'id_paciente'");
-if ($checkColumn && $checkColumn->fetch()) {
-    $hasIdPaciente = true;
-}
+$checkColumn = $pdo->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1');
+$checkColumn->execute(['public', 'programacion', 'id_paciente']);
+$hasIdPaciente = (bool) $checkColumn->fetchColumn();
 
-$hasRelTable = (bool) $pdo->query("SHOW TABLES LIKE 'cuidadores_pacientes'")->fetch();
+$hasRelTable = (bool) $pdo->query("SELECT to_regclass('public.cuidadores_pacientes') IS NOT NULL")->fetchColumn();
 $modoLegacy = !$hasIdPaciente || !$hasRelTable;
 
 if ($modoLegacy) {
@@ -22,7 +20,7 @@ if ($modoLegacy) {
         FROM programacion p
         JOIN medicamentos m ON p.id_medicamento = m.id_medicamento
         WHERE p.id_usuario = ? AND p.estado = 'activo'
-        ORDER BY CASE WHEN p.hora_dispenso >= CURTIME() THEN 0 ELSE 1 END, p.hora_dispenso ASC
+        ORDER BY CASE WHEN p.hora_dispenso >= CURRENT_TIME THEN 0 ELSE 1 END, p.hora_dispenso ASC
         LIMIT 10
     ";
     $stmt = $pdo->prepare($sql);
@@ -35,7 +33,7 @@ if ($modoLegacy) {
         JOIN cuidadores_pacientes cp ON cp.id_paciente = p.id_paciente
         JOIN usuarios u ON u.id_usuario = p.id_paciente
         WHERE cp.id_cuidador = ? AND p.estado = 'activo'
-        ORDER BY CASE WHEN p.hora_dispenso >= CURTIME() THEN 0 ELSE 1 END, p.hora_dispenso ASC
+        ORDER BY CASE WHEN p.hora_dispenso >= CURRENT_TIME THEN 0 ELSE 1 END, p.hora_dispenso ASC
         LIMIT 10
     ";
     $stmt = $pdo->prepare($sql);

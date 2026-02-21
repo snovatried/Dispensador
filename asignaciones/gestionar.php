@@ -11,15 +11,15 @@ $mensaje = '';
 $error = '';
 
 function columnaExiste(PDO $pdo, string $tabla, string $columna): bool {
-    $stmt = $pdo->prepare("SHOW COLUMNS FROM {$tabla} LIKE ?");
-    $stmt->execute([$columna]);
-    return (bool) $stmt->fetch();
+    $stmt = $pdo->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1');
+    $stmt->execute(['public', $tabla, $columna]);
+    return (bool) $stmt->fetchColumn();
 }
 
 function tablaExiste(PDO $pdo, string $tabla): bool {
-    $stmt = $pdo->prepare('SHOW TABLES LIKE ?');
-    $stmt->execute([$tabla]);
-    return (bool) $stmt->fetch();
+    $stmt = $pdo->prepare('SELECT to_regclass(?) IS NOT NULL');
+    $stmt->execute(['public.' . $tabla]);
+    return (bool) $stmt->fetchColumn();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -28,17 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accion === 'migrar') {
         try {
             if (!columnaExiste($pdo, 'programacion', 'id_paciente')) {
-                $pdo->exec('ALTER TABLE programacion ADD COLUMN id_paciente INT NULL AFTER id_usuario');
-                $pdo->exec('ALTER TABLE programacion ADD INDEX idx_programacion_id_paciente (id_paciente)');
+                $pdo->exec('ALTER TABLE programacion ADD COLUMN id_paciente INT NULL');
+                $pdo->exec('CREATE INDEX IF NOT EXISTS idx_programacion_id_paciente ON programacion (id_paciente)');
                 $pdo->exec('ALTER TABLE programacion ADD CONSTRAINT fk_programacion_paciente FOREIGN KEY (id_paciente) REFERENCES usuarios(id_usuario)');
             }
 
             $pdo->exec("CREATE TABLE IF NOT EXISTS cuidadores_pacientes (
-                id_relacion INT AUTO_INCREMENT PRIMARY KEY,
+                id_relacion SERIAL PRIMARY KEY,
                 id_cuidador INT NOT NULL,
                 id_paciente INT NOT NULL,
                 fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY uq_cuidador_paciente (id_cuidador, id_paciente),
+                CONSTRAINT uq_cuidador_paciente UNIQUE (id_cuidador, id_paciente),
                 CONSTRAINT fk_cp_cuidador FOREIGN KEY (id_cuidador) REFERENCES usuarios(id_usuario),
                 CONSTRAINT fk_cp_paciente FOREIGN KEY (id_paciente) REFERENCES usuarios(id_usuario)
             )");
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!tablaExiste($pdo, 'cuidadores_pacientes')) {
             $error = 'Primero debes aplicar la migración.';
         } else {
-            $stmt = $pdo->prepare('INSERT IGNORE INTO cuidadores_pacientes (id_cuidador, id_paciente) VALUES (?, ?)');
+            $stmt = $pdo->prepare('INSERT INTO cuidadores_pacientes (id_cuidador, id_paciente) VALUES (?, ?) ON CONFLICT (id_cuidador, id_paciente) DO NOTHING');
             $stmt->execute([$idCuidador, $idPaciente]);
             $mensaje = 'Asignación guardada.';
         }
@@ -150,13 +150,13 @@ if ($tablaRelExiste) {
             </thead>
             <tbody>
             <?php if (count($asignaciones) === 0): ?>
-                <tr><td colspan="2">Sin asignaciones aún.</td></tr>
+                <tr><td colspan="2">Sin asignaciones.</td></tr>
             <?php else: ?>
                 <?php foreach ($asignaciones as $a): ?>
-                <tr>
-                    <td><?= htmlspecialchars($a['cuidador']) ?></td>
-                    <td><?= htmlspecialchars($a['paciente']) ?></td>
-                </tr>
+                    <tr>
+                        <td><?= htmlspecialchars($a['cuidador']) ?></td>
+                        <td><?= htmlspecialchars($a['paciente']) ?></td>
+                    </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
             </tbody>

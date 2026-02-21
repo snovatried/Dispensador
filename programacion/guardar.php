@@ -7,11 +7,9 @@ if (!isset($_SESSION['id_usuario']) || !in_array($_SESSION['rol'] ?? '', ['admin
     exit;
 }
 
-$hasIdPaciente = false;
-$checkColumn = $pdo->query("SHOW COLUMNS FROM programacion LIKE 'id_paciente'");
-if ($checkColumn && $checkColumn->fetch()) {
-    $hasIdPaciente = true;
-}
+$checkColumn = $pdo->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1');
+$checkColumn->execute(['public', 'programacion', 'id_paciente']);
+$hasIdPaciente = (bool) $checkColumn->fetchColumn();
 
 if ($hasIdPaciente) {
     $idPaciente = $_POST['id_paciente'] ?? null;

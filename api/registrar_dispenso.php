@@ -19,7 +19,7 @@ if (!$id_programacion || !$resultado) {
 
 $sql = "INSERT INTO historial_dispenso
 (id_programacion, fecha, hora, resultado, observaciones)
-VALUES (?, CURDATE(), CURTIME(), ?, ?)";
+VALUES (?, CURRENT_DATE, CURRENT_TIME, ?, ?)";
 
 try {
     $stmt = $pdo->prepare($sql);
