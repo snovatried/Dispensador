@@ -43,14 +43,9 @@ $usuarioDB = $stmt->fetch();
 if (!$usuarioDB) {
     $passwordRandom = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
 
-    $insert = $pdo->prepare('INSERT INTO usuarios (nombre, usuario, contrasena, rol, estado) VALUES (?, ?, ?, ?, ?)');
+    $insert = $pdo->prepare('INSERT INTO usuarios (nombre, usuario, contrasena, rol, estado) VALUES (?, ?, ?, ?, ?) RETURNING id_usuario, rol');
     $insert->execute([$nombre, $email, $passwordRandom, 'paciente', 'activo']);
-
-    $idUsuario = $pdo->lastInsertId();
-    $usuarioDB = [
-        'id_usuario' => $idUsuario,
-        'rol' => 'paciente',
-    ];
+    $usuarioDB = $insert->fetch();
 }
 
 $_SESSION['id_usuario'] = $usuarioDB['id_usuario'];

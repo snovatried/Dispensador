@@ -10,7 +10,7 @@ SELECT
     p.cantidad
 FROM programacion p
 JOIN medicamentos m ON p.id_medicamento = m.id_medicamento
-WHERE p.hora_dispenso = CURTIME()
+WHERE p.hora_dispenso::time(0) = CURRENT_TIME::time(0)
 AND p.estado = 'activo'
 ";
 

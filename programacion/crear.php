@@ -12,8 +12,9 @@ $dashboard = $rol === 'admin' ? '../dashboard/admin.php' : '../dashboard/cuidado
 $showSuccess = isset($_GET['ok']);
 
 $hasIdPaciente = false;
-$checkColumn = $pdo->query("SHOW COLUMNS FROM programacion LIKE 'id_paciente'");
-if ($checkColumn && $checkColumn->fetch()) {
+$checkColumn = $pdo->prepare('SELECT 1 FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1');
+$checkColumn->execute(['public', 'programacion', 'id_paciente']);
+if ($checkColumn->fetchColumn()) {
     $hasIdPaciente = true;
 }
 
@@ -25,7 +26,7 @@ if ($hasIdPaciente) {
         $stmtPacientes = $pdo->query("SELECT id_usuario, nombre FROM usuarios WHERE rol = 'paciente' AND estado = 'activo' ORDER BY nombre");
         $pacientes = $stmtPacientes->fetchAll();
     } else {
-        $hasRelTable = $pdo->query("SHOW TABLES LIKE 'cuidadores_pacientes'")->fetch();
+        $hasRelTable = $pdo->query("SELECT to_regclass('public.cuidadores_pacientes') IS NOT NULL")->fetchColumn();
         if ($hasRelTable) {
             $sqlPacientes = "
                 SELECT u.id_usuario, u.nombre
@@ -79,7 +80,7 @@ if ($hasIdPaciente) {
             <select id="id_medicamento" name="id_medicamento" required>
                 <option value="">Selecciona uno</option>
                 <?php foreach ($medicamentos as $m): ?>
-                    <option value="<?= (int)$m['id_medicamento'] ?>">
+                    <option value="<?= (int) $m['id_medicamento'] ?>">
                         <?= htmlspecialchars($m['nombre'] . ' - ' . ($m['dosis'] ?: 'sin dosis')) ?>
                     </option>
                 <?php endforeach; ?>
